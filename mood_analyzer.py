@@ -9,9 +9,17 @@ This class starts with very simple logic:
   - Convert that score into a mood label
 """
 
+import re
+
 from typing import List, Dict, Tuple, Optional
 
 from dataset import POSITIVE_WORDS, NEGATIVE_WORDS
+
+# Matches a single emoji / pictographic character so we can treat each one
+# as its own token (emojis are strong mood signals in the sample posts).
+_EMOJI_RE = re.compile(
+    "[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF\U0000FE00-\U0000FE0F\U0000200D]"
+)
 
 
 class MoodAnalyzer:
@@ -47,13 +55,30 @@ class MoodAnalyzer:
           - Converts everything to lowercase
           - Splits on spaces
 
-        Ideas to improve:
-          - Remove punctuation
-          - Handle simple emojis separately (":)", ":-(", "🥲", "😂")
-          - Normalize repeated characters ("soooo" -> "soo")
+        Improvements implemented here:
+          - Lowercase and strip surrounding whitespace.
+          - Split each emoji out as its own token (so "day 😂🔥" -> "day", "😂", "🔥"),
+            since emojis are strong mood signals in the sample posts.
+          - Strip leading/trailing punctuation off word tokens
+            (so "fine." matches "fine" and "exam!!" matches "exam").
+          - Drop tokens that become empty after cleaning.
         """
         cleaned = text.strip().lower()
-        tokens = cleaned.split()
+
+        # Surround each emoji with spaces so it splits into its own token.
+        cleaned = _EMOJI_RE.sub(lambda m: f" {m.group(0)} ", cleaned)
+
+        tokens: List[str] = []
+        for raw in cleaned.split():
+            if _EMOJI_RE.match(raw):
+                # Keep emoji tokens exactly as-is.
+                tokens.append(raw)
+                continue
+            # Strip punctuation from the edges of word tokens, keeping
+            # internal characters like the apostrophe in "can't".
+            word = raw.strip(".,!?;:\"'()[]{}…-")
+            if word:
+                tokens.append(word)
 
         return tokens
 
@@ -68,22 +93,33 @@ class MoodAnalyzer:
         Positive words increase the score.
         Negative words decrease the score.
 
-        TODO: You must choose AT LEAST ONE modeling improvement to implement.
-        For example:
-          - Handle simple negation such as "not happy" or "not bad"
-          - Count how many times each word appears instead of just presence
-          - Give some words higher weights than others (for example "hate" < "annoyed")
-          - Treat emojis or slang (":)", "lol", "💀") as strong signals
+        Enhancement implemented here: NEGATION HANDLING.
+        A negation word ("not", "never", "no", "don't", "can't") flips the
+        polarity of the next mood word. So "not happy" scores -1 instead of +1,
+        and "not bad" scores +1 instead of -1.
         """
-        # TODO: Implement this method.
-        #   1. Call self.preprocess(text) to get tokens.
-        #   2. Loop over the tokens.
-        #   3. Increase the score for positive words, decrease for negative words.
-        #   4. Return the total score.
-        #
-        # Hint: if you implement negation, you may want to look at pairs of tokens,
-        # like ("not", "happy") or ("never", "fun").
-        pass
+        tokens = self.preprocess(text)
+
+        negators = {"not", "never", "no", "don't", "dont", "can't", "cant"}
+
+        score = 0
+        negate_next = False
+
+        for token in tokens:
+            if token in negators:
+                # Flip the polarity of the next mood word we encounter.
+                negate_next = True
+                continue
+
+            # +1 for positive, -1 for negative; a pending negation flips the sign.
+            if token in self.positive_words:
+                score += -1 if negate_next else 1
+                negate_next = False
+            elif token in self.negative_words:
+                score += 1 if negate_next else -1
+                negate_next = False
+
+        return score
 
     # ---------------------------------------------------------------------
     # Label prediction
@@ -105,12 +141,13 @@ class MoodAnalyzer:
         Just remember that whatever labels you return should match the labels
         you use in TRUE_LABELS in dataset.py if you care about accuracy.
         """
-        # TODO: Implement this method.
-        #   1. Call self.score_text(text) to get the numeric score.
-        #   2. Return "positive" if the score is above 0.
-        #   3. Return "negative" if the score is below 0.
-        #   4. Return "neutral" otherwise.
-        pass
+        score = self.score_text(text)
+
+        if score > 0:
+            return "positive"
+        if score < 0:
+            return "negative"
+        return "neutral"
 
     # ---------------------------------------------------------------------
     # Explanations (optional but recommended)

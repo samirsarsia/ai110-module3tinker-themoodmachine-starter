@@ -23,6 +23,12 @@ POSITIVE_WORDS = [
     "chill",
     "relaxed",
     "amazing",
+    # Added to close the slang/vocabulary gap surfaced by breaker sentences.
+    "best",
+    "proud",
+    "hopeful",
+    "fire",     # slang: "this is fire" = excellent
+    "wicked",   # slang: "wicked good"
 ]
 
 NEGATIVE_WORDS = [
@@ -50,6 +56,18 @@ SAMPLE_POSTS = [
     "This is fine",
     "So excited for the weekend",
     "I am not happy about this",
+    "lowkey exhausted but we move 😮‍💨",
+    "no cap this was the best day ever 😂🔥",
+    "oh great, another Monday. can't wait 🙄",
+    "idk how i feel about this tbh 🥲",
+    "cried a little but honestly needed that",
+    "meeting got moved again lol whatever",
+    "passed my exam!! screaming rn 😭💅",
+    "it's fine. everything is fine. 💀",
+    "wow what a fantastic idea, love losing my whole weekend to this 🙃",
+    "honestly today was pretty solid, no complaints",
+    "nervous about the interview but also kinda hyped ngl",
+    "the food was cold and the service was slow",
 ]
 
 # Human labels for each post above.
@@ -65,6 +83,18 @@ TRUE_LABELS = [
     "neutral",   # "This is fine"
     "positive",  # "So excited for the weekend"
     "negative",  # "I am not happy about this"
+    "mixed",     # "lowkey exhausted but we move 😮‍💨" (tired + resilient)
+    "positive",  # "no cap this was the best day ever 😂🔥"
+    "negative",  # "oh great, another Monday. can't wait 🙄" (sarcasm)
+    "neutral",   # "idk how i feel about this tbh 🥲" (ambiguous / uncertain)
+    "mixed",     # "cried a little but honestly needed that" (sad + relief)
+    "neutral",   # "meeting got moved again lol whatever" (mild annoyance/indifference)
+    "positive",  # "passed my exam!! screaming rn 😭💅"
+    "negative",  # "it's fine. everything is fine. 💀" (sarcastic distress)
+    "negative",  # "wow what a fantastic idea, love losing..." (sarcasm)
+    "positive",  # "honestly today was pretty solid, no complaints"
+    "mixed",     # "nervous about the interview but also kinda hyped"
+    "negative",  # "the food was cold and the service was slow"
 ]
 
 # TODO: Add 5-10 more posts and labels.
